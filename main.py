@@ -110,11 +110,17 @@ def get_user(db, username: str):
         return UserInDB(**user_dict)
 
 
+wrong_attempts = {}
+
+
 def authenticate_user(fake_db, username: str, password: str):
     user = get_user(fake_db, username)
     if not user:
         return False
+    if wrong_attempts.setdefault(username, 0) == 5:
+        return False
     if not verify_password(password, user.hashed_password):
+        wrong_attempts[username] += 1
         return False
     return user
 
@@ -184,18 +190,18 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@app.get("/users/me/", response_model=User)
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-):
-    return current_user
+# @app.get("/users/me/", response_model=User)
+# async def read_users_me(
+#     current_user: Annotated[User, Depends(get_current_active_user)],
+# ):
+#     return current_user
 
 
-@app.get("/users/me/items/")
-async def read_own_items(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-):
-    return [{"item_id": "Foo", "owner": current_user.username}]
+# @app.get("/users/me/items/")
+# async def read_own_items(
+#     current_user: Annotated[User, Depends(get_current_active_user)],
+# ):
+#     return [{"item_id": "Foo", "owner": current_user.username}]
 
 
 @app.post("/products/{product_id}")
