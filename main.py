@@ -232,6 +232,7 @@ async def read_user_orders(
         return get_all_orders()
     else:
         return get_user_orders(current_user.id)
+    # return get_all_orders()
 
 
 def only_admin_can_make_discount(discount, user=None):

@@ -12,6 +12,7 @@ def test_update_product_as_admin():
     }
     response = client.post("/token", data=admin_data)
     access_token = response.json()["access_token"]
+
     headers = {"Authorization": f"bearer {access_token}"}
     response = client.post("/products/1", json={"price": 0}, headers=headers)
     assert response.status_code == 200
