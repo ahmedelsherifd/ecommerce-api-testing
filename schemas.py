@@ -34,9 +34,21 @@ class Customer(BaseModel):
     full_name: str
 
 
+class Product(BaseModel):
+    id: int
+    name: str
+    price: float
+
+
 class Order(BaseModel):
-    customer_id: int
-    customer: Customer
+    id: int
+    customer_id: int | None = None
+    customer: Customer | None = None
+    product: Product
+    unit_price: float
+    total_price: float
+    quantity: int
+    email: str | None = None
 
 
 class OrderInput(BaseModel):

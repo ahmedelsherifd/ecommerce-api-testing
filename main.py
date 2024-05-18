@@ -58,20 +58,36 @@ fake_users_db = {
 
 fake_order_db = [
     {
+        "id": 1,
         "customer_id": "2",
         "customer": {
             "username": "reda",
             "full_name": "Reda Elmesery",
         },
+        "product_id": 1,
+        "product": {"id": 1, "price": 100, "name": "Iphone"},
+        "quantity": 1,
+        "unit_price": 100,
+        "total_price": 100,
+        "discount": 0,
     },
     {
+        "id": 2,
         "customer_id": "3",
         "customer": {
             "username": "ibrahim",
             "full_name": "Ibrahim Nour",
         },
+        "product_id": 1,
+        "product": {"id": 1, "price": 100, "name": "Iphone"},
+        "quantity": 1,
+        "unit_price": 100,
+        "total_price": 100,
+        "discount": 0,
     },
 ]
+
+fake_products = {1: {"id": 1, "price": 100, "name": "Iphone"}}
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -218,10 +234,46 @@ async def read_user_orders(
         return get_user_orders(current_user.id)
 
 
-@app.post("/orders/")
+def only_admin_can_make_discount(discount, user=None):
+    if discount != 0 and user.role != "admin":
+        raise HTTPException(status_code=400, detail="Not Allowed discount")
+
+
+@app.post("/orders/", response_model=Order)
 async def create_order(
+    order_input: OrderInput,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     # customer can place order but can't use discount property
     # property level
-    return {}
+    only_admin_can_make_discount(order_input.discount, current_user)
+
+    return create_fake_order(order_input.model_dump())
+
+
+def create_fake_order(input_data):
+    product = fake_products[input_data["product_id"]]
+    quantity = input_data["quantity"]
+    unit_price = fake_products[input_data["product_id"]]["price"]
+    discount = input_data["discount"]
+    total_price = quantity * unit_price * ((100 - discount) / 100)
+    order = {**input_data}
+
+    order.update(
+        {
+            "id": 3,
+            # "customer_id": "3",
+            # "customer": {
+            #     "username": "ibrahim",
+            #     "full_name": "Ibrahim Nour",
+            # },
+            "product_id": product["id"],
+            "product": product,
+            "quantity": quantity,
+            "unit_price": unit_price,
+            "total_price": total_price,
+            "discount": discount,
+        }
+    )
+
+    return order

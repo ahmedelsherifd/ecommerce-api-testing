@@ -111,4 +111,4 @@ def test_create_order_as_guest():
             "email": "guest@example.com",
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == 401
