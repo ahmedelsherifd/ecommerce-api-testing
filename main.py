@@ -118,7 +118,11 @@ def create_fake_order(input_data):
     return order
 
 
-def get_all_orders():
+def get_all_orders(user_id=None):
+    if user_id:
+        return [
+            order for order in fake_order_db if int(order["customer_id"]) == user_id
+        ]
     return fake_order_db
 
 
@@ -154,7 +158,8 @@ def authenticate_user(fake_db, username: str, password: str):
     user = get_user(fake_db, username)
     if not user:
         return False
-    if wrong_attempts.setdefault(username, 0) == 5:
+    wrong_attempts.setdefault(username, 0)
+    if wrong_attempts[username] == 5:
         return False
     if not verify_password(password, user.hashed_password):
         wrong_attempts[username] += 1
@@ -263,11 +268,11 @@ async def read_user_orders(
 ):
     # customer should get his orders only not all orders
     # object level
-    if current_user.role == "admin":
-        return get_all_orders()
-    else:
-        return get_user_orders(current_user.id)
-    # return get_all_orders()
+
+    if current_user.role != "admin":
+        return get_all_orders(current_user.id)
+
+    return get_all_orders()
 
 
 def only_admin_can_make_discount(discount, user=None):
@@ -282,6 +287,6 @@ async def create_order(
 ):
     # customer can place order but can't use discount property
     # property level
-    only_admin_can_make_discount(order_input.discount, current_user)
 
+    only_admin_can_make_discount(order_input.discount, current_user)
     return create_fake_order(order_input.model_dump())
