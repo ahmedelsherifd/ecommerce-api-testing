@@ -5,7 +5,15 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from schemas import User, UserInDB, Token, TokenData, ProductUpdateInput
+from schemas import (
+    User,
+    UserInDB,
+    Token,
+    TokenData,
+    ProductUpdateInput,
+    Order,
+    OrderInput,
+)
 
 # to get a string like this run:
 # openssl rand -hex 32
@@ -16,6 +24,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 fake_users_db = {
     "sayed": {
+        "id": 1,
         "username": "sayed",
         "full_name": "Ahmed Abd Elgawad",
         "email": "sayed@example.com",
@@ -25,17 +34,44 @@ fake_users_db = {
         "disabled": False,
     },
     "reda": {
+        "id": 2,
         "username": "reda",
         "full_name": "Reda Elmesery",
-        "role": "customer",
         "email": "reda@example.com",
         # password="KA5=u33|@]8t"
         "hashed_password": "$2b$12$EKeRgu1rSAeOczp1dLAebOSbReMcTR1P0qTYVCiU5M.FgUAI1d3Ay",
         "role": "customer",
         "disabled": False,
     },
+    "ibrahim": {
+        "id": 3,
+        "username": "ibrahim",
+        "full_name": "Ibrahim Nour",
+        "email": "ibrahim@example.com",
+        # password=",@3#62S&#'tp"
+        "hashed_password": "$2b$12$xMiVL2TMo0vLmPdV3ltde.9KTVecVE5R9EnIGK5V6CroyQ/CEBazK",
+        "role": "customer",
+        "disabled": False,
+    },
 }
 
+
+fake_order_db = [
+    {
+        "customer_id": "2",
+        "customer": {
+            "username": "reda",
+            "full_name": "Reda Elmesery",
+        },
+    },
+    {
+        "customer_id": "3",
+        "customer": {
+            "username": "ibrahim",
+            "full_name": "Ibrahim Nour",
+        },
+    },
+]
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -110,7 +146,7 @@ async def only_admin_user(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Not Allowed user")
+        raise HTTPException(status_code=400, detail="Not Allowed user")
     return current_user
 
 
@@ -152,9 +188,40 @@ async def update_product(
     product_input: ProductUpdateInput,
     current_user: Annotated[User, Depends(only_admin_user)],
 ):
+    # should be avalible for onlyy admin users
+    # function level
     product = {
         "id": product_id,
         "name": "product1",
     }
     product.update(product_input)
     return product
+
+
+def get_all_orders():
+    return fake_order_db
+
+
+def get_user_orders(user_id: int):
+    return [order for order in fake_order_db if int(order["customer_id"]) == user_id]
+
+
+@app.get("/orders/", response_model=list[Order])
+async def read_user_orders(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
+    # customer should get his orders only not all orders
+    # object level
+    if current_user.role == "admin":
+        return get_all_orders()
+    else:
+        return get_user_orders(current_user.id)
+
+
+@app.post("/orders/")
+async def create_order(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    # customer can place order but can't use discount property
+    # property level
+    return {}

@@ -13,6 +13,7 @@ class TokenData(BaseModel):
 
 
 class User(BaseModel):
+    id: int
     username: str
     role: str
     email: str | None = None
@@ -26,3 +27,20 @@ class UserInDB(User):
 
 class ProductUpdateInput(BaseModel):
     price: float
+
+
+class Customer(BaseModel):
+    username: str
+    full_name: str
+
+
+class Order(BaseModel):
+    customer_id: int
+    customer: Customer
+
+
+class OrderInput(BaseModel):
+    product_id: int
+    quantity: int
+    discount: float | None = 0
+    email: str | None = None
