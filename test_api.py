@@ -113,3 +113,28 @@ def test_create_order_as_guest():
         },
     )
     assert response.status_code == 401
+
+
+def test_auth_attempts_limit_5():
+    user_data = {
+        "username": "reda",
+    }
+    user_data.update({"password": "58f8e745"})
+
+    client.post("/token", data=user_data)
+
+    user_data.update({"password": "58f8e745"})
+    client.post("/token", data=user_data)
+
+    user_data.update({"password": "82f3d7fc"})
+    client.post("/token", data=user_data)
+
+    user_data.update({"password": "d262fe72"})
+    client.post("/token", data=user_data)
+
+    user_data.update({"password": "aee0235a"})
+    client.post("/token", data=user_data)
+
+    user_data.update({"password": "KA5=u33|@]8t"})
+    response = client.post("/token", data=user_data)
+    assert response.status_code == 401
