@@ -209,7 +209,7 @@ async def only_admin_user(
     return current_user
 
 
-@app.post("/token")
+@app.post("/token", tags=["users"])
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
@@ -241,7 +241,7 @@ async def login_for_access_token(
 #     return [{"item_id": "Foo", "owner": current_user.username}]
 
 
-@app.post("/products/{product_id}")
+@app.post("/products/{product_id}", tags=["products"])
 async def update_product(
     product_id: int,
     product_input: ProductUpdateInput,
@@ -257,7 +257,7 @@ async def update_product(
     return product
 
 
-@app.get("/orders/", response_model=list[Order])
+@app.get("/orders/", response_model=list[Order], tags=["orders"])
 async def read_user_orders(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
@@ -275,7 +275,7 @@ def only_admin_can_make_discount(discount, user=None):
         raise HTTPException(status_code=400, detail="Not Allowed discount")
 
 
-@app.post("/orders/", response_model=Order)
+@app.post("/orders/", response_model=Order, tags=["orders"])
 async def create_order(
     order_input: OrderInput,
     current_user: Annotated[User, Depends(get_current_active_user)],
